@@ -1,0 +1,295 @@
+/*
+ * TCPclient.c
+ *
+ *  Created on: 2015年11月4日
+ *      Author: Administrator
+ */
+#include "ets_sys.h"
+#include "osapi.h"
+#include "mem.h"
+#include "uart.h"
+#include "os_type.h"
+#include "espconn.h"
+#include "upgrade.h"
+
+#include "TCPclient.h"
+#include "SHT20.h"
+
+
+
+#define NET_DOMAIN "cn.bing.com"
+#define pheadbuffer "GET / HTTP/1.1\r\nUser-Agent: curl/7.37.0\r\nHost: %s\r\nAccept: */*\r\n\r\n"
+
+#define packet_size   (2 * 1024)
+
+
+ char    POST_main[]="POST /api/V1/gateway/UpdateSensorsbysn/5FD41B94 HTTP/1.1\r\nHost: ht.api.lewei50.com\r\nConnection:keep-alive\r\nContent-Length:   \r\n\r\n[{\"Name\":\"T1\",\"Value\":\"    \"},{\"Name\":\"H1\",\"Value\":\"    \"}]\r\n";
+
+    //char    POST_tab1[]="POST /api/V1/gateway/UpdateSensorsbysn/CD473DF8 HTTP/1.1\r\n";//7132A730
+    //char    POST_tab1[]="POST /api/V1/gateway/UpdateSensorsbysn/7132A730 HTTP/1.1\r\n";//7132A730
+    char    POST_tab1[]="POST /api/V1/gateway/UpdateSensorsbysn/";//   7132A730  5FD41B94将设备SN由保存的数据提取 在esp8266_init
+    char    POST_tab3[]="         HTTP/1.1\r\nHost: ht.api.lewei50.com\r\n";//the first 8 pos for SN
+    char    POST_tab4[]="Connection:keep-alive\r\n";
+    char    POST_tab5[]="Content-Length:   \r\n\r\n";
+    char    POST_tab6[]="[{\"Name\":\"T1\",\"Value\":\"    \"},";//[{"Name":"temperature","Value":"32"}]
+    char    POST_tab7[]="{\"Name\":\"H1\",\"Value\":\"    \"}]\r\n";
+
+extern int16_t   SHT_humi;
+extern int16_t   SHT_temp;
+extern uint32 interval_timer_cnt;
+extern struct VA_saved_param	VA_param;
+
+
+typedef enum {
+	work_state_noip           = 0,	//did not got ip
+	work_state_set_ser,				//set server
+	work_state_got_set,				//got set data
+	work_state_conn_ap,				//connected to another AP
+	work_state_conn_ser,			//connected to server
+	work_state_send_ok				//send OK
+} _work_state;
+extern work_state;
+
+
+LOCAL os_timer_t test_timer;
+LOCAL struct espconn user_tcp_conn;
+LOCAL struct _esp_tcp user_tcp;
+ip_addr_t tcp_server_ip;
+
+os_timer_t interval_timer;//post interval timer
+os_timer_t watch_timer;
+
+void watch_timer_cb(void)
+{
+	system_restart();
+}
+
+void ICACHE_FLASH_ATTR
+user_tcp_connect(void)
+{
+	// struct espconn *myesp_conn = &user_tcp_conn;
+
+	 espconn_disconnect(&user_tcp_conn);//disconnect first.
+
+	 os_timer_disarm(&watch_timer);//限制每次发送的时间不超过20s
+	 os_timer_setfn(&watch_timer,watch_timer_cb,NULL);
+	 os_timer_arm(&watch_timer,20000,1);//20s 相当于watchdog//限制获取
+
+	 user_tcp_conn.proto.tcp = &user_tcp;
+	 user_tcp_conn.type = ESPCONN_TCP;
+	 user_tcp_conn.state = ESPCONN_NONE;
+
+	 const char esp_tcp_server_ip[4] = {42,121,254,11}; // remote IP of TCP server
+
+	 os_memcpy(user_tcp_conn.proto.tcp->remote_ip, esp_tcp_server_ip, 4);
+
+	 user_tcp_conn.proto.tcp->remote_port = 80;  // remote port
+
+	 user_tcp_conn.proto.tcp->local_port = espconn_port(); //local port of ESP8266
+
+	 espconn_regist_connectcb(&user_tcp_conn, user_tcp_connect_cb); // register connect callback
+	 espconn_regist_reconcb(&user_tcp_conn, user_tcp_recon_cb); // register reconnect callback as error handler
+
+	 switch(espconn_connect(&user_tcp_conn)){
+	 	 case ESPCONN_OK: 			work_state=work_state_conn_ser;
+									os_timer_disarm(&led_flash_timer);//停止定时器
+									gpio_output_set( BIT5, 0, BIT5, 0);//GPIO5 --1 熄灭led
+	 	 	 	 	 	 	 	 	 break;
+
+	 	 case ESPCONN_MEM:			os_printf("Out of memory error.");
+	 	 	 	 	 	 	 	 	 gpio_output_set( 0, BIT5, 0, BIT5);//GPIO5 --1 点亮led
+	 	 	 	 	 	 	 	 	 //system_deep_sleep(60000000);
+
+	 	 	 	 	 	 	 	 	 //break;//当连接出错时睡眠1min再重试
+
+	 	 case ESPCONN_TIMEOUT: 		os_printf("Timeout.");os_timer_disarm(&interval_timer);
+	 	 	 	 	 	 	 	 	 //system_deep_sleep(60000000);
+	 	 	 	 	 	 	 	 	 gpio_output_set( 0, BIT5, 0, BIT5);//GPIO5 --1 点亮led
+	 	 	 	 	 	 	 	 	 //break;
+
+	 	 case ESPCONN_RTE: 			os_printf("Routing problem.");os_timer_disarm(&interval_timer);
+	 	 	 	 	 	 	 	 	 //system_deep_sleep(60000000);
+	 	 	 	 	 	 	 	 	 gpio_output_set( 0, BIT5, 0, BIT5);//GPIO5 --1 点亮led
+	 	 	 	 	 	 	 	 	 //break;
+
+	 	 case ESPCONN_INPROGRESS:	os_printf("Operation in progress");os_timer_disarm(&interval_timer);
+	 	 	 	 	 	 	 	 	 //system_deep_sleep(60000000);
+	 	 	 	 	 	 	 	 	 gpio_output_set( 0, BIT5, 0, BIT5);//GPIO5 --1 点亮led
+	 	 	 	 	 	 	 	 	 break;
+
+	 	 default :break;
+	 		//ESPCONN_RTE
+	 }
+}
+
+/******************************************************************************
+ * FunctionName : user_tcp_connect_cb
+ * Description  : A new incoming tcp connection has been connected.
+ * Parameters   : arg -- Additional argument to pass to the callback function
+ * Returns      : none
+*******************************************************************************/
+LOCAL void ICACHE_FLASH_ATTR
+user_tcp_connect_cb(void *arg)
+{
+    struct espconn *pespconn = arg;
+
+    os_printf("connect ht.lewei50,com succeed !!! \r\n");
+
+    espconn_regist_recvcb(pespconn, user_tcp_recv_cb);
+    espconn_regist_sentcb(pespconn, user_tcp_sent_cb);
+    espconn_regist_disconcb(pespconn, user_tcp_discon_cb);
+
+    if(SHT20_read())
+	{
+		//os_printf("SHT20_read succeed!!! \r\n");
+		os_printf("SHT_temp:%d!!! \r\n",SHT_temp);
+		os_printf("SHT_humi:%d!!! \r\n",SHT_humi);
+	}
+
+    user_sent_data(pespconn);
+    os_printf("prepare to sleep interval_timer_cnt:%d!!! \r\n",interval_timer_cnt);
+    /*os_timer_disarm(&interval_timer);//led flash timer   1Hz
+    os_timer_setfn(&interval_timer,interval_timer_cb,NULL);
+    os_timer_arm(&interval_timer,15000,1);*/
+
+    //system_deep_sleep(interval_timer_cnt);
+
+}
+
+/******************************************************************************
+ * FunctionName : user_tcp_recon_cb
+ * Description  : reconnect callback, error occured in TCP connection.
+ * Parameters   : arg -- Additional argument to pass to the callback function
+ * Returns      : none
+*******************************************************************************/
+LOCAL void ICACHE_FLASH_ATTR
+user_tcp_recon_cb(void *arg, sint8 err)
+{
+   //error occured , tcp connection broke. user can try to reconnect here.
+	//ESCONN_TIMEOUT
+    os_printf("reconnect callback, error code %d !!! \r\n",err);
+    //os_printf("POST fail,sleep untill the next time to post !!! \r\n",err);
+    os_printf("sleep:%d S. \r\n",interval_timer_cnt/1000000);
+    system_deep_sleep(interval_timer_cnt);
+}
+
+/******************************************************************************
+ * FunctionName : user_tcp_recv_cb
+ * Description  : receive callback.
+ * Parameters   : arg -- Additional argument to pass to the callback function
+ * Returns      : none
+*******************************************************************************/
+LOCAL void ICACHE_FLASH_ATTR
+user_tcp_recv_cb(void *arg, char *pusrdata, unsigned short length)
+{
+   //received some data from tcp connection
+    os_printf("tcp recv: %s \r\n", pusrdata);
+
+    if(os_strstr(pusrdata,"{\"Successful\":true,\"Message\":\"Successful. \"}"))
+    {
+
+    	work_state=work_state_send_ok;
+    	system_deep_sleep(interval_timer_cnt);
+    }
+    else
+    {
+    	os_printf("lewei server return a error message!!! \r\n");
+    	gpio_output_set( 0, BIT5, 0, BIT5);//GPIO5 --1 点亮led
+
+    	//stop here,and the module will restart by the watch timer 20s later.
+    }
+
+}
+/******************************************************************************
+ * FunctionName : user_tcp_sent_cb
+ * Description  : data sent callback.
+ * Parameters   : arg -- Additional argument to pass to the callback function
+ * Returns      : none
+*******************************************************************************/
+LOCAL void ICACHE_FLASH_ATTR
+user_tcp_sent_cb(void *arg)
+{
+   //data sent successfully
+
+    os_printf("tcp sent succeed !!! \r\n");
+}
+/******************************************************************************
+ * FunctionName : user_tcp_discon_cb
+ * Description  : disconnect callback.
+ * Parameters   : arg -- Additional argument to pass to the callback function
+ * Returns      : none
+*******************************************************************************/
+LOCAL void ICACHE_FLASH_ATTR
+user_tcp_discon_cb(void *arg)
+{
+   //tcp disconnect successfully
+
+    os_printf("tcp disconnect succeed !!! \r\n");
+}
+/******************************************************************************
+ * FunctionName : user_esp_platform_sent
+ * Description  : Processing the application data and sending it to the host
+ * Parameters   : pespconn -- the espconn used to connetion with the host
+ * Returns      : none
+*******************************************************************************/
+LOCAL void ICACHE_FLASH_ATTR
+user_sent_data(struct espconn *pespconn)
+{
+	sint8 i=0;
+	uint16 POST_length,data_length;
+	char *pStr;
+	//char mySN[8]="B5A3B051";//THE SN 8A298D9A
+    //char *pbuf = (char *)os_zalloc(packet_size);
+    os_printf("ready to post !!! \r\n");
+    for(i=0;i<8;i++)//use the last 8 SN
+    {
+    	POST_tab3[i]=VA_param.param_SN[i+2];//mySN[i];
+    }
+    POST_length=strlen(POST_tab1)+strlen(POST_tab3)\
+                  +strlen(POST_tab4)+strlen(POST_tab5)\
+                  +strlen(POST_tab6)+strlen(POST_tab7);
+    data_length=strlen(POST_tab6)+strlen(POST_tab7);
+      *(POST_tab5+16)=data_length/10+0x30;
+      *(POST_tab5+17)=data_length%10+0x30;
+
+    pStr=strstr(POST_tab6,"Value");
+    *(pStr+8)=SHT_temp/100+0x30;
+    *(pStr+9)=SHT_temp%100/10+0x30;
+    *(pStr+10)='.';
+    *(pStr+11)=SHT_temp%10+0x30;
+
+    pStr=strstr(POST_tab7,"Value");
+    *(pStr+8)=SHT_humi/100+0x30;
+    *(pStr+9)=SHT_humi%100/10+0x30;
+    *(pStr+10)='.';
+    *(pStr+11)=SHT_humi%10+0x30;
+
+    strcpy(POST_main,POST_tab1);
+          strcat(POST_main,POST_tab3);
+          strcat(POST_main,POST_tab4);
+          strcat(POST_main,POST_tab5);
+          strcat(POST_main,POST_tab6);
+          strcat(POST_main,POST_tab7);
+
+	  os_printf("%s",POST_main);
+	  espconn_sent(pespconn, POST_main,POST_length);
+
+    //os_sprintf(pbuf, pheadbuffer, NET_DOMAIN);
+    //espconn_sent(pespconn, pbuf, os_strlen(pbuf));
+    //os_free(pbuf);
+
+}
+
+LOCAL void ICACHE_FLASH_ATTR
+interval_timer_cb()
+{
+	user_tcp_connect();
+}
+
+
+
+
+
+
+
+
