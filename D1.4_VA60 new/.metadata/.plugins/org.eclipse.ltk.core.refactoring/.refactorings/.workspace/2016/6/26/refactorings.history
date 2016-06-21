@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">
+<refactoring comment="Delete resource &apos;D1.4_VA60 new/app/user/uart.c&apos;" deleteContents="false" description="Delete resource &apos;D1.4_VA60 new/app/user/uart.c&apos;" element1="/D1.4_VA60 new/app/user/uart.c" flags="7" id="org.eclipse.ltk.core.refactoring.delete.resources" resources="1" stamp="1466405065205"/>
+</session>

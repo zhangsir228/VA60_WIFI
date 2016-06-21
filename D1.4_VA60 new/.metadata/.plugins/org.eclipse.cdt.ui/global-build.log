@@ -1,0 +1,71 @@
+13:36:24 **** Build of configuration Default for project D1.4_VA60 new ****
+make all 
+make[1]: Entering directory '/cygdrive/e/zhangyu/ESP8266/VA60_WIFI/D1.4_VA60 new/D1.4_VA60 new/app'
+make[2]: Entering directory '/cygdrive/e/zhangyu/ESP8266/VA60_WIFI/D1.4_VA60 new/D1.4_VA60 new/app/user'
+DEPEND: xt-xcc -M -Os -g -Wpointer-arith -Wundef -Werror -Wl,-EL -fno-inline-functions -nostdlib -mlongcalls -mtext-section-literals -ffunction-sections -fdata-sections -DICACHE_FLASH -I include -I ./ -I ../../include/ets -I ../include -I ../../include -I ../../include/eagle user_main.c
+xt-xcc -Os -g -Wpointer-arith -Wundef -Werror -Wl,-EL -fno-inline-functions -nostdlib -mlongcalls -mtext-section-literals -ffunction-sections -fdata-sections  -DICACHE_FLASH   -I include -I ./ -I ../../include/ets -I ../include -I ../../include -I ../../include/eagle  -o .output/eagle/debug/obj/user_main.o -c user_main.c
+xt-ar ru .output/eagle/debug/lib/libuser.a .output/eagle/debug/obj/user_main.o 
+xt-ar: creating .output/eagle/debug/lib/libuser.a
+make[2]: Leaving directory '/cygdrive/e/zhangyu/ESP8266/VA60_WIFI/D1.4_VA60 new/D1.4_VA60 new/app/user'
+xt-xcc  -L../lib -nostdlib -T../ld/eagle.app.v6.ld -Wl,--no-check-sections -u call_user_start -Wl,-static -Wl,--start-group -lc -lgcc -lhal -lphy -lpp -lnet80211 -llwip -lwpa -lmain -ljson -lssl -lupgrade -lsmartconfig user/.output/eagle/debug/lib/libuser.a -Wl,--end-group -o .output/eagle/debug/image/eagle.app.v6.out 
+user/.output/eagle/debug/lib/libuser.a(user_main.o):(.text.user_init+0x10): undefined reference to `uart_init'
+user/.output/eagle/debug/lib/libuser.a(user_main.o): In function `user_init':
+/cygdrive/e/zhangyu/ESP8266/VA60_WIFI/D1.4_VA60 new/D1.4_VA60 new/app/user/user_main.c:63: undefined reference to `uart_init'
+../Makefile:362: recipe for target '.output/eagle/debug/image/eagle.app.v6.out' failed
+collect2: error: ld returned 1 exit status
+make[1]: Leaving directory '/cygdrive/e/zhangyu/ESP8266/VA60_WIFI/D1.4_VA60 new/D1.4_VA60 new/app'
+Makefile:307: recipe for target '.subdirs' failed
+make[1]: *** [.output/eagle/debug/image/eagle.app.v6.out] Error 1
+make: *** [.subdirs] Error 2
+13:37:30 **** Incremental Build of configuration Default for project D1.4_VA60 new ****
+make all 
+make[1]: Entering directory '/cygdrive/e/zhangyu/ESP8266/VA60_WIFI/D1.4_VA60 new/D1.4_VA60 new/app'
+make[2]: Entering directory '/cygdrive/e/zhangyu/ESP8266/VA60_WIFI/D1.4_VA60 new/D1.4_VA60 new/app/user'
+DEPEND: xt-xcc -M -Os -g -Wpointer-arith -Wundef -Werror -Wl,-EL -fno-inline-functions -nostdlib -mlongcalls -mtext-section-literals -ffunction-sections -fdata-sections -DICACHE_FLASH -I include -I ./ -I ../../include/ets -I ../include -I ../../include -I ../../include/eagle user_main.c
+xt-xcc -Os -g -Wpointer-arith -Wundef -Werror -Wl,-EL -fno-inline-functions -nostdlib -mlongcalls -mtext-section-literals -ffunction-sections -fdata-sections  -DICACHE_FLASH   -I include -I ./ -I ../../include/ets -I ../include -I ../../include -I ../../include/eagle  -o .output/eagle/debug/obj/user_main.o -c user_main.c
+xt-ar ru .output/eagle/debug/lib/libuser.a .output/eagle/debug/obj/user_main.o 
+make[2]: Leaving directory '/cygdrive/e/zhangyu/ESP8266/VA60_WIFI/D1.4_VA60 new/D1.4_VA60 new/app/user'
+xt-xcc  -L../lib -nostdlib -T../ld/eagle.app.v6.ld -Wl,--no-check-sections -u call_user_start -Wl,-static -Wl,--start-group -lc -lgcc -lhal -lphy -lpp -lnet80211 -llwip -lwpa -lmain -ljson -lssl -lupgrade -lsmartconfig user/.output/eagle/debug/lib/libuser.a -Wl,--end-group -o .output/eagle/debug/image/eagle.app.v6.out 
+user/.output/eagle/debug/lib/libuser.a(user_main.o):(.text.user_init+0x10): undefined reference to `uart_init'
+user/.output/eagle/debug/lib/libuser.a(user_main.o): In function `user_init':
+/cygdrive/e/zhangyu/ESP8266/VA60_WIFI/D1.4_VA60 new/D1.4_VA60 new/app/user/user_main.c:64: undefined reference to `uart_init'
+collect2: error: ld returned 1 exit status
+make[1]: *** [.output/eagle/debug/image/eagle.app.v6.out] Error 1
+../Makefile:362: recipe for target '.output/eagle/debug/image/eagle.app.v6.out' failed
+make[1]: Leaving directory '/cygdrive/e/zhangyu/ESP8266/VA60_WIFI/D1.4_VA60 new/D1.4_VA60 new/app'
+make: *** [.subdirs] Error 2
+Makefile:307: recipe for target '.subdirs' failed
+13:41:26 **** Incremental Build of configuration Default for project D1.4_VA60 new ****
+make all 
+make[1]: Entering directory '/cygdrive/e/zhangyu/ESP8266/VA60_WIFI/D1.4_VA60 new/D1.4_VA60 new/app'
+make[2]: Entering directory '/cygdrive/e/zhangyu/ESP8266/VA60_WIFI/D1.4_VA60 new/D1.4_VA60 new/app/user'
+DEPEND: xt-xcc -M -Os -g -Wpointer-arith -Wundef -Werror -Wl,-EL -fno-inline-functions -nostdlib -mlongcalls -mtext-section-literals -ffunction-sections -fdata-sections -DICACHE_FLASH -I include -I ./ -I ../../include/ets -I ../include -I ../../include -I ../../include/eagle uart.c
+xt-xcc -Os -g -Wpointer-arith -Wundef -Werror -Wl,-EL -fno-inline-functions -nostdlib -mlongcalls -mtext-section-literals -ffunction-sections -fdata-sections  -DICACHE_FLASH   -I include -I ./ -I ../../include/ets -I ../include -I ../../include -I ../../include/eagle  -o .output/eagle/debug/obj/uart.o -c uart.c
+xt-ar ru .output/eagle/debug/lib/libuser.a .output/eagle/debug/obj/uart.o 
+make[2]: Leaving directory '/cygdrive/e/zhangyu/ESP8266/VA60_WIFI/D1.4_VA60 new/D1.4_VA60 new/app/user'
+xt-xcc  -L../lib -nostdlib -T../ld/eagle.app.v6.ld -Wl,--no-check-sections -u call_user_start -Wl,-static -Wl,--start-group -lc -lgcc -lhal -lphy -lpp -lnet80211 -llwip -lwpa -lmain -ljson -lssl -lupgrade -lsmartconfig user/.output/eagle/debug/lib/libuser.a -Wl,--end-group -o .output/eagle/debug/image/eagle.app.v6.out 
+
+!!!
+No boot needed.
+Generate eagle.flash.bin and eagle.irom0text.bin successully in folder bin.
+eagle.flash.bin-------->0x00000
+eagle.irom0text.bin---->0x40000
+!!!
+make[1]: Leaving directory '/cygdrive/e/zhangyu/ESP8266/VA60_WIFI/D1.4_VA60 new/D1.4_VA60 new/app'
+14:45:05 **** Incremental Build of configuration Default for project D1.4_VA60 new ****
+make all 
+make[1]: Entering directory '/cygdrive/e/zhangyu/ESP8266/VA60_WIFI/D1.4_VA60 new/D1.4_VA60 new/app'
+make[2]: Entering directory '/cygdrive/e/zhangyu/ESP8266/VA60_WIFI/D1.4_VA60 new/D1.4_VA60 new/app/user'
+DEPEND: xt-xcc -M -Os -g -Wpointer-arith -Wundef -Werror -Wl,-EL -fno-inline-functions -nostdlib -mlongcalls -mtext-section-literals -ffunction-sections -fdata-sections -DICACHE_FLASH -I include -I ./ -I ../../include/ets -I ../include -I ../../include -I ../../include/eagle user_main.c
+xt-xcc -Os -g -Wpointer-arith -Wundef -Werror -Wl,-EL -fno-inline-functions -nostdlib -mlongcalls -mtext-section-literals -ffunction-sections -fdata-sections  -DICACHE_FLASH   -I include -I ./ -I ../../include/ets -I ../include -I ../../include -I ../../include/eagle  -o .output/eagle/debug/obj/user_main.o -c user_main.c
+xt-ar ru .output/eagle/debug/lib/libuser.a .output/eagle/debug/obj/user_main.o 
+make[2]: Leaving directory '/cygdrive/e/zhangyu/ESP8266/VA60_WIFI/D1.4_VA60 new/D1.4_VA60 new/app/user'
+xt-xcc  -L../lib -nostdlib -T../ld/eagle.app.v6.ld -Wl,--no-check-sections -u call_user_start -Wl,-static -Wl,--start-group -lc -lgcc -lhal -lphy -lpp -lnet80211 -llwip -lwpa -lmain -ljson -lssl -lupgrade -lsmartconfig user/.output/eagle/debug/lib/libuser.a -Wl,--end-group -o .output/eagle/debug/image/eagle.app.v6.out 
+
+!!!
+No boot needed.
+Generate eagle.flash.bin and eagle.irom0text.bin successully in folder bin.
+eagle.flash.bin-------->0x00000
+eagle.irom0text.bin---->0x40000
+!!!
+make[1]: Leaving directory '/cygdrive/e/zhangyu/ESP8266/VA60_WIFI/D1.4_VA60 new/D1.4_VA60 new/app'

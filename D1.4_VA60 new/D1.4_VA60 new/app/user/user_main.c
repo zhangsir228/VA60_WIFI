@@ -13,6 +13,7 @@
 
 #include "user_interface.h"
 #include "smartconfig.h"
+#include "../include/uart.h"
 
 void ICACHE_FLASH_ATTR
 smartconfig_done(sc_status status, void *pdata)
@@ -61,6 +62,8 @@ void user_rf_pre_init(void)
 
 void user_init(void)
 {
+	uart_init(115200, 115200);
+
     os_printf("SDK version:%s\n", system_get_sdk_version());
 	smartconfig_set_type(SC_TYPE_ESPTOUCH); //SC_TYPE_ESPTOUCH,SC_TYPE_AIRKISS,SC_TYPE_ESPTOUCH_AIRKISS
     wifi_set_opmode(STATION_MODE);
